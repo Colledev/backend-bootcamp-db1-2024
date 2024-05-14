@@ -1,12 +1,13 @@
-const express = require('express');
-const { Op } = require('sequelize');
+const express = require("express");
+const { Op } = require("sequelize");
 
-const { middlewareAuthentication } = require('../middlewares/authentication');
-const { validationResultCheck } = require('../validators');
+const { middlewareAuthentication } = require("../middlewares/authentication");
+const { validationResultCheck } = require("../validators");
 const {
-  validateCreateTask, validateUpdateTask,
-} = require('../validators/tasks');
-const Task = require('../models/Task');
+  validateCreateTask,
+  validateUpdateTask,
+} = require("../validators/tasks");
+const Task = require("../models/Task");
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ const router = express.Router();
  * Cadastro de tarefas para o usuário logado
  */
 router.post(
-  '/',
+  "/",
   middlewareAuthentication,
   validateCreateTask,
   async (req, res) => {
@@ -38,73 +39,65 @@ router.post(
       console.warn(error);
       res.status(500).send();
     }
-  },
+  }
 );
 
 /**
  * Consulta de tarefas do usuário logado
  */
-router.get(
-  '/',
-  middlewareAuthentication,
-  async (req, res) => {
-    try {
-      const { loggedUser, query } = req;
+router.get("/", middlewareAuthentication, async (req, res) => {
+  try {
+    const { loggedUser, query } = req;
 
-      const { title } = query;
+    const { title } = query;
 
-      const where = {
-        userId: loggedUser.id,
+    const where = {
+      userId: loggedUser.id,
+    };
+    if (title) {
+      where.title = {
+        [Op.like]: `%${title}%`,
       };
-      if (title) {
-        where.title = {
-          [Op.like]: `%${title}%`,
-        };
-      }
-
-      const tasks = await Task.findAll({
-        where,
-      });
-
-      res.status(200).json(tasks);
-    } catch (error) {
-      console.warn(error);
-      res.status(500).send();
     }
-  },
-);
+
+    const tasks = await Task.findAll({
+      where,
+    });
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.warn(error);
+    res.status(500).send();
+  }
+});
 
 /**
  * Retorna tarefa por ID do usuário logado
  */
-router.get(
-  '/:taskId',
-  middlewareAuthentication,
-  async (req, res) => {
-    try {
-      const { loggedUser, params } = req;
+router.get("/:taskId", middlewareAuthentication, async (req, res) => {
+  try {
+    const { loggedUser, params } = req;
 
-      const { taskId } = params;
+    const { taskId } = params;
 
-      const task = await Task.findOne({
-        where: {
-          id: taskId,
-          userId: loggedUser.id,
-        },
-      });
+    const task = await Task.findOne({
+      where: {
+        id: taskId,
+        userId: loggedUser.id,
+      },
+    });
 
-      if (!task) {
-        res.status(404).send('Tarefa não encontrada.');
-        return;
-      }
-
-      res.status(200).json(task);
-    } catch (error) {
-      console.warn(error);
-      res.status(500).send();
+    if (!task) {
+      res.status(404).send("Tarefa não encontrada.");
+      return;
     }
-  },
-);
+
+    res.status(200).json(task);
+  } catch (error) {
+    console.warn(error);
+    res.status(500).send();
+  }
+});
 
 /**
  * Atualiza a tarefa alterando o valor da coluna "concluded" para true ou false.
@@ -143,62 +136,54 @@ const updateTaskConcluded = async (userId, taskId, concluded) => {
 /**
  * Marca a tarefa do usuário como concluída
  */
-router.put(
-  '/:taskId/concluded',
-  middlewareAuthentication,
-  async (req, res) => {
-    try {
-      const { loggedUser, params } = req;
+router.put("/:taskId/concluded", middlewareAuthentication, async (req, res) => {
+  try {
+    const { loggedUser, params } = req;
 
-      const { taskId } = params;
+    const { taskId } = params;
 
-      const task = await updateTaskConcluded(loggedUser.id, taskId, true);
+    const task = await updateTaskConcluded(loggedUser.id, taskId, true);
 
-      if (!task) {
-        res.status(404).send('Tarefa não encontrada.');
-        return;
-      }
-
-      res.status(200).json(task);
-    } catch (error) {
-      console.warn(error);
-      res.status(500).send();
+    if (!task) {
+      res.status(404).send("Tarefa não encontrada.");
+      return;
     }
-  },
-);
+
+    res.status(200).json(task);
+  } catch (error) {
+    console.warn(error);
+    res.status(500).send();
+  }
+});
 
 /**
  * Marca a tarefa do usuário como pendente
  */
-router.put(
-  '/:taskId/pending',
-  middlewareAuthentication,
-  async (req, res) => {
-    try {
-      const { loggedUser, params } = req;
+router.put("/:taskId/pending", middlewareAuthentication, async (req, res) => {
+  try {
+    const { loggedUser, params } = req;
 
-      const { taskId } = params;
+    const { taskId } = params;
 
-      const task = await updateTaskConcluded(loggedUser.id, taskId, false);
+    const task = await updateTaskConcluded(loggedUser.id, taskId, false);
 
-      if (!task) {
-        res.status(404).send('Tarefa não encontrada.');
-        return;
-      }
-
-      res.status(200).json(task);
-    } catch (error) {
-      console.warn(error);
-      res.status(500).send();
+    if (!task) {
+      res.status(404).send("Tarefa não encontrada.");
+      return;
     }
-  },
-);
+
+    res.status(200).json(task);
+  } catch (error) {
+    console.warn(error);
+    res.status(500).send();
+  }
+});
 
 /**
  * Atualiza os dados da tarefa do usuário de forma parcial
  */
 router.patch(
-  '/:taskId',
+  "/:taskId",
   middlewareAuthentication,
   validateUpdateTask,
   async (req, res) => {
@@ -219,7 +204,7 @@ router.patch(
         },
       });
       if (!task) {
-        res.status(404).send('Tarefa não encontrada.');
+        res.status(404).send("Tarefa não encontrada.");
         return;
       }
 
@@ -233,7 +218,35 @@ router.patch(
       console.warn(error);
       res.status(500).send();
     }
-  },
+  }
 );
+
+/**
+ * Remove a tarefa do banco de dados
+ */
+router.delete("/:taskId", middlewareAuthentication, async (req, res) => {
+  try {
+    const { loggedUser, params } = req;
+
+    const { taskId } = params;
+
+    const deletedTasks = await Task.destroy({
+      where: {
+        id: taskId,
+        userId: loggedUser.id,
+      },
+    });
+
+    if (!deletedTasks) {
+      res.status(404).send("Tarefa não encontrada.");
+      return;
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.warn(error);
+    res.status(500).send();
+  }
+});
 
 module.exports = router;
